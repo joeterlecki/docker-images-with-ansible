@@ -1,0 +1,38 @@
+---
+- name: Pull latest Nginx Image
+  hosts: localhost
+  tasks:
+  - name: Pull Nginx Image
+    docker_container:
+      name: "nginx-ansible-base"
+      image: "nginx:latest"
+      state: started
+      command: tail -f /dev/null
+  - name: Add Nginx Image to Ansible Hosts
+    add_host:
+      name: "nginx-ansible-base"
+      ansible_connection: docker
+      ansible_ssh_user: root
+
+- name: Configure Nginx Base Image for deploying Webserver
+  hosts: "nginx-ansible-base"
+  gather_facts: false
+  tasks:
+    - name: Install Python3
+      raw: apt update && apt upgrade -y && apt install python3 -y
+    - name: Install Rsync
+      apt:
+        name: rsync
+    - name: Copy local configuration Files to Nginx Conf
+      synchronize:
+        src: ./website/
+        dest: /usr/share/nginx/html/
+    - name: Clean up Python 3 and Prequisites
+      raw: apt purge python3 -y
+
+- name: Snapshot base image to create newly configured Imafe
+  hosts: localhost
+  run_once: true
+  tasks:
+    - name: Commit Docker image
+      command: docker commit "nginx-ansible-base" "nginx-ansible-build-demo"
