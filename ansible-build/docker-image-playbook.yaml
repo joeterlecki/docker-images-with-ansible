@@ -28,11 +28,19 @@
         src: ./website/
         dest: /usr/share/nginx/html/
     - name: Clean up Python 3 and Prequisites
-      raw: apt purge python3 -y
+      raw: apt purge python3 rsync -y
 
 - name: Snapshot base image to create newly configured Imafe
   hosts: localhost
-  run_once: true
   tasks:
     - name: Commit Docker image
       command: docker commit "nginx-ansible-base" "nginx-ansible-build-demo"
+
+- name: Clean Up Docker Containers
+  hosts: localhost
+  tasks:
+    - name: Remove Running Base Image
+      docker_container:
+        name: nginx-ansible-base
+        state: absent
+        force_kill: yes
