@@ -27,6 +27,10 @@
       synchronize:
         src: ./website/
         dest: /usr/share/nginx/html/
+    - name: Ensure NGINX Is enabled
+      service:
+        name: nginx
+        enabled: yes
     - name: Clean up Python 3 and Prequisites
       raw: apt purge python3 rsync -y
 
